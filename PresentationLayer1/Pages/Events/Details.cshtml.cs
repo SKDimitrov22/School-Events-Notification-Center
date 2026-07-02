@@ -23,8 +23,25 @@ public sealed class DetailsModel(IApiClient api, IAuthSession auth) : PageModel
             return RedirectToPage("/Login");
         }
 
-        await api.RegisterAsync(id, cancellationToken);
-        TempData["Message"] = "Registration updated.";
+        try
+        {
+            var registration = await api.RegisterAsync(id, cancellationToken);
+            if (registration is { Status: "WAITLISTED" })
+            {
+                TempData["Message"] = registration.WaitlistPosition is int position
+                    ? $"The event is full — you're on the waitlist at position {position}."
+                    : "The event is full — you've been added to the waitlist.";
+            }
+            else
+            {
+                TempData["Message"] = "You're registered — see you there!";
+            }
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToPage("/Events/Details", new { id });
     }
 
@@ -36,8 +53,16 @@ public sealed class DetailsModel(IApiClient api, IAuthSession auth) : PageModel
             return RedirectToPage("/Login");
         }
 
-        await api.CancelRegistrationAsync(registrationId, cancellationToken);
-        TempData["Message"] = "Registration cancelled.";
+        try
+        {
+            await api.CancelRegistrationAsync(registrationId, cancellationToken);
+            TempData["Message"] = "Registration cancelled.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToPage("/Events/Details", new { id });
     }
 }

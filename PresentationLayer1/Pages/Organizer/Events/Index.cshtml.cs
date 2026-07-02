@@ -29,8 +29,16 @@ public sealed class IndexModel(IApiClient api, IAuthSession auth) : PageModel
             return RedirectToPage("/Login");
         }
 
-        await api.PublishEventAsync(id, cancellationToken);
-        TempData["Message"] = "Event published.";
+        try
+        {
+            await api.PublishEventAsync(id, cancellationToken);
+            TempData["Message"] = "Event published.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToPage();
     }
 
@@ -42,8 +50,16 @@ public sealed class IndexModel(IApiClient api, IAuthSession auth) : PageModel
             return RedirectToPage("/Login");
         }
 
-        await api.CancelEventAsync(id, cancellationToken);
-        TempData["Message"] = "Event cancelled.";
+        try
+        {
+            await api.CancelEventAsync(id, cancellationToken);
+            TempData["Message"] = "Event cancelled.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToPage();
     }
 }

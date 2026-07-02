@@ -12,6 +12,19 @@
   <a class="button" asp-page="/Organizer/Events/Edit">New event</a>
 </section>
 
+@if (Model.Events.Count == 0)
+{
+  <section class="panel empty-state">
+    <span class="badge">No events</span>
+    <h2>Create your first event</h2>
+    <p class="muted">Draft an event, then publish it when you're ready for students to register.</p>
+    <div class="actions">
+      <a class="button" asp-page="/Organizer/Events/Edit">New event</a>
+    </div>
+  </section>
+}
+else
+{
 <div class="grid">
 @foreach (var item in Model.Events)
 {
@@ -43,7 +56,7 @@
       <a class="button secondary" asp-page="/Organizer/Events/Registrations" asp-route-id="@item.Id">Signups</a>
       @if (item.Status == "PUBLISHED")
       {
-        <a class="button secondary" asp-page="/Events/Details" asp-route-id="@item.Id" target="_blank">Public link</a>
+        <a class="button secondary" asp-page="/Events/Details" asp-route-id="@item.Id" target="_blank" rel="noopener">Public link</a>
         <button class="button secondary js-copy-link"
                 data-url="@Url.Page("/Events/Details", new { id = item.Id })">Copy link</button>
       }
@@ -63,4 +76,5 @@
   </article>
 }
 </div>
+}
 

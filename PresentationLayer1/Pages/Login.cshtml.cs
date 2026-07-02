@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using PresentationLayer1.Models;
 using PresentationLayer1.Services;
 
 namespace PresentationLayer1.Pages;
@@ -31,7 +32,17 @@ public sealed class LoginModel(IApiClient api, IAuthSession auth, IConfiguration
     {
         IsMockLogin = config.GetValue<bool>("MOCK_LOGIN", false);
 
-        var login = await api.LoginAsync(Email, Password, cancellationToken);
+        LoginResponse? login;
+        try
+        {
+            login = await api.LoginAsync(Email, Password, cancellationToken);
+        }
+        catch (ApiException ex)
+        {
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return Page();
+        }
+
         if (login is null)
         {
             ModelState.AddModelError(string.Empty, IsMockLogin ? "Mock user not found." : "Invalid email or password.");

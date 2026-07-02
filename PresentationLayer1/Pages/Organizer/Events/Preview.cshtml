@@ -19,4 +19,15 @@
     <a class="button secondary" asp-page="/Organizer/Events/Index">Back</a>
   </section>
 }
+else
+{
+  <section class="panel empty-state">
+    <span class="badge">404</span>
+    <h1>Event not available</h1>
+    <p class="muted">This event no longer exists or you don't have access to it.</p>
+    <div class="actions">
+      <a class="button secondary" asp-page="/Organizer/Events/Index">Back to events</a>
+    </div>
+  </section>
+}
 

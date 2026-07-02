@@ -23,6 +23,10 @@
       </tr>
     </thead>
     <tbody>
+    @if (Model.Logs.Count == 0)
+    {
+      <tr><td colspan="5" class="muted">No notifications have been sent yet.</td></tr>
+    }
     @foreach (var item in Model.Logs)
     {
       <tr>

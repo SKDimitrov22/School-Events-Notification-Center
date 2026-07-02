@@ -10,6 +10,7 @@
     <h1>Mock login</h1>
     <p class="muted">Choose one seeded account while the real authentication backend is being built.</p>
     <form method="post" class="stack">
+      <div asp-validation-summary="All" class="notice error"></div>
       <label>
         Account
         <select asp-for="Email">
@@ -25,9 +26,9 @@
   {
     <h1>Login</h1>
     <form method="post" class="stack">
+      <div asp-validation-summary="All" class="notice error"></div>
       <label>Email<input asp-for="Email" type="email" required /></label>
       <label>Password<input asp-for="Password" type="password" required /></label>
-      <span asp-validation-summary="All" class="muted"></span>
       <button type="submit">Login</button>
     </form>
   }

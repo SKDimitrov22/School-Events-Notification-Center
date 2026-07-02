@@ -32,6 +32,9 @@ artifacts/
 .DS_Store
 Thumbs.db
 
+# Claude Code personal/local settings
+.claude/settings.local.json
+
 # SQLite (keep schema.sql + seed.sql; regenerate .db with InitDb)
 DataAccessLayer3/Db/*.db
 DataAccessLayer3/Db/*.db-*

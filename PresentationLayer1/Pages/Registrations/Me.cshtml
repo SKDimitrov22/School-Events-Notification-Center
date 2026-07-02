@@ -11,6 +11,19 @@
   </div>
 </section>
 
+@if (Model.Registrations.Count == 0)
+{
+  <section class="panel empty-state">
+    <span class="badge">No signups</span>
+    <h2>You haven't registered yet</h2>
+    <p class="muted">Browse the events list and register to see your signups here.</p>
+    <div class="actions">
+      <a class="button" asp-page="/Events/Index">Browse events</a>
+    </div>
+  </section>
+}
+else
+{
 <section class="panel">
   <table>
     <thead>
@@ -27,9 +40,9 @@
     {
       <tr>
         <td>@registration.EventTitle</td>
-        <td><span class="badge">@registration.Status</span></td>
+        <td><span class="badge @registration.Status.ToLowerInvariant()">@registration.Status</span></td>
         <td>@(registration.WaitlistPosition?.ToString() ?? "-")</td>
-        <td>@registration.RegisteredAt</td>
+        <td><time class="local-time" datetime="@registration.RegisteredAt">@registration.RegisteredAt</time></td>
         <td>
           <form method="post" asp-page-handler="Cancel">
             <input type="hidden" name="registrationId" value="@registration.Id" />
@@ -41,4 +54,5 @@
     </tbody>
   </table>
 </section>
+}
 

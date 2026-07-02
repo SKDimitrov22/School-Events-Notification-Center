@@ -7,6 +7,7 @@
 <section class="panel">
   <h1>@ViewData["Title"]</h1>
   <form method="post" class="form-grid">
+    <div asp-validation-summary="All" class="notice error"></div>
     <label>
       Title
       <input asp-for="Input.Title" />
@@ -19,12 +20,14 @@
     </label>
     <label>
       Starts at
-      <input asp-for="Input.StartsAt" />
+      <input type="datetime-local" class="js-local-datetime" data-target="Input_StartsAt" />
+      <input type="hidden" asp-for="Input.StartsAt" />
       <span asp-validation-for="Input.StartsAt"></span>
     </label>
     <label>
       Ends at
-      <input asp-for="Input.EndsAt" />
+      <input type="datetime-local" class="js-local-datetime" data-target="Input_EndsAt" />
+      <input type="hidden" asp-for="Input.EndsAt" />
       <span asp-validation-for="Input.EndsAt"></span>
     </label>
     <label>
@@ -37,7 +40,7 @@
       <input asp-for="Input.Location" />
     </label>
     <div class="actions">
-      <button type="submit">Save draft</button>
+      <button type="submit">@(Model.Id is null ? "Create draft" : "Save changes")</button>
       <a class="button secondary" asp-page="/Organizer/Events/Index">Back</a>
     </div>
   </form>

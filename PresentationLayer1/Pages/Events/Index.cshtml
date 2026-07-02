@@ -11,13 +11,30 @@
   </div>
 </section>
 
+@if (Model.Events.Count == 0)
+{
+  <section class="panel empty-state">
+    <span class="badge">No events</span>
+    <h2>Nothing published yet</h2>
+    <p class="muted">There are no published events to show right now. Check back soon.</p>
+  </section>
+}
+else
+{
 <div class="grid">
 @foreach (var item in Model.Events)
 {
   <article class="card">
     <div class="card-head">
       <h2>@item.Title</h2>
-      <span class="badge @item.Status.ToLowerInvariant()">@item.Status</span>
+      @if (!string.Equals(item.Status, "PUBLISHED", StringComparison.OrdinalIgnoreCase))
+      {
+        <span class="badge @item.Status.ToLowerInvariant()">@item.Status</span>
+      }
+      else if (item.IsFull)
+      {
+        <span class="badge cancelled">Full</span>
+      }
     </div>
     <p>@item.Description</p>
     <dl class="meta">
@@ -36,4 +53,5 @@
   </article>
 }
 </div>
+}
 

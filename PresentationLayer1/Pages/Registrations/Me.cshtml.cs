@@ -29,8 +29,16 @@ public sealed class MeModel(IApiClient api, IAuthSession auth) : PageModel
             return RedirectToPage("/Login");
         }
 
-        await api.CancelRegistrationAsync(registrationId, cancellationToken);
-        TempData["Message"] = "Registration cancelled.";
+        try
+        {
+            await api.CancelRegistrationAsync(registrationId, cancellationToken);
+            TempData["Message"] = "Registration cancelled.";
+        }
+        catch (ApiException ex)
+        {
+            TempData["Error"] = ex.Message;
+        }
+
         return RedirectToPage();
     }
 }

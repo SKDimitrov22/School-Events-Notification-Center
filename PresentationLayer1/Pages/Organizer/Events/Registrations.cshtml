@@ -6,29 +6,38 @@
 
 <section class="page-heading">
   <div>
-    <h1>@Model.Event?.Title signups</h1>
+    <h1>@(Model.Event?.Title ?? "Event") — signups</h1>
     <p class="muted">Confirmed registrations and FIFO waitlist.</p>
   </div>
+  <a class="button secondary" asp-page="/Organizer/Events/Index">Back</a>
 </section>
 
 <section class="split">
   <div class="panel">
-    <h2>Confirmed</h2>
+    <h2>Confirmed (@Model.Confirmed.Count)</h2>
     <table>
       <thead><tr><th>Name</th><th>Email</th><th>Registered</th></tr></thead>
       <tbody>
+      @if (Model.Confirmed.Count == 0)
+      {
+        <tr><td colspan="3" class="muted">No confirmed registrations yet.</td></tr>
+      }
       @foreach (var item in Model.Confirmed)
       {
-        <tr><td>@item.UserDisplayName</td><td>@item.UserEmail</td><td>@item.RegisteredAt</td></tr>
+        <tr><td>@item.UserDisplayName</td><td>@item.UserEmail</td><td><time class="local-time" datetime="@item.RegisteredAt">@item.RegisteredAt</time></td></tr>
       }
       </tbody>
     </table>
   </div>
   <div class="panel">
-    <h2>Waitlist</h2>
+    <h2>Waitlist (@Model.Waitlist.Count)</h2>
     <table>
       <thead><tr><th>#</th><th>Name</th><th>Email</th></tr></thead>
       <tbody>
+      @if (Model.Waitlist.Count == 0)
+      {
+        <tr><td colspan="3" class="muted">The waitlist is empty.</td></tr>
+      }
       @foreach (var item in Model.Waitlist)
       {
         <tr><td>@item.WaitlistPosition</td><td>@item.UserDisplayName</td><td>@item.UserEmail</td></tr>

@@ -1,7 +1,14 @@
+using System.Net;
 using System.Net.Http.Json;
 using PresentationLayer1.Models;
 
 namespace PresentationLayer1.Services;
+
+/// <summary>
+/// Raised when the backend rejects a request. Carries a message that is safe to
+/// show to the user so page handlers can surface it instead of crashing with a 500.
+/// </summary>
+public sealed class ApiException(string message) : Exception(message);
 
 public interface IApiClient
 {
@@ -22,8 +29,22 @@ public interface IApiClient
 
 public sealed class ApiClient(HttpClient httpClient, IAuthSession authSession) : IApiClient
 {
-    public Task<LoginResponse?> LoginAsync(string email, string password, CancellationToken cancellationToken = default) =>
-        PostAsync<LoginRequest, LoginResponse>("login", new LoginRequest(email, password), cancellationToken);
+    public async Task<LoginResponse?> LoginAsync(string email, string password, CancellationToken cancellationToken = default)
+    {
+        using var request = NewRequest(HttpMethod.Post, "login");
+        request.Content = JsonContent.Create(new LoginRequest(email, password));
+        using var response = await httpClient.SendAsync(request, cancellationToken);
+
+        // Bad credentials are an expected outcome, not an error: let the caller
+        // decide how to phrase it (mock vs. real login) by returning null.
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            return null;
+        }
+
+        await EnsureSuccessAsync(response, cancellationToken);
+        return await response.Content.ReadFromJsonAsync<LoginResponse>(cancellationToken);
+    }
 
     public Task<IReadOnlyList<EventSummary>> GetEventsAsync(CancellationToken cancellationToken = default) =>
         GetListAsync<EventSummary>("events", cancellationToken);
@@ -50,7 +71,7 @@ public sealed class ApiClient(HttpClient httpClient, IAuthSession authSession) :
     {
         using var request = NewRequest(HttpMethod.Delete, $"registrations/{Uri.EscapeDataString(registrationId)}");
         using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
     }
 
     public Task<IReadOnlyList<RegistrationSummary>> GetMyRegistrationsAsync(CancellationToken cancellationToken = default) =>
@@ -89,7 +110,7 @@ public sealed class ApiClient(HttpClient httpClient, IAuthSession authSession) :
         using var request = NewRequest(HttpMethod.Post, path);
         request.Content = JsonContent.Create(body);
         using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
         return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
     }
 
@@ -98,9 +119,40 @@ public sealed class ApiClient(HttpClient httpClient, IAuthSession authSession) :
         using var request = NewRequest(HttpMethod.Put, path);
         request.Content = JsonContent.Create(body);
         using var response = await httpClient.SendAsync(request, cancellationToken);
-        response.EnsureSuccessStatusCode();
+        await EnsureSuccessAsync(response, cancellationToken);
         return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken);
     }
+
+    private static async Task EnsureSuccessAsync(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        // Prefer the backend's own message (e.g. { "error": "..." }) when present.
+        string? message = null;
+        try
+        {
+            var body = await response.Content.ReadFromJsonAsync<ApiError>(cancellationToken);
+            message = string.IsNullOrWhiteSpace(body?.Error) ? null : body!.Error;
+        }
+        catch
+        {
+            // Body was empty or not JSON — fall back to a status-based message.
+        }
+
+        throw new ApiException(message ?? (response.StatusCode switch
+        {
+            HttpStatusCode.Unauthorized => "Your session has expired. Please sign in again.",
+            HttpStatusCode.Forbidden => "You don't have permission to do that.",
+            HttpStatusCode.NotFound => "That item no longer exists.",
+            HttpStatusCode.BadRequest or HttpStatusCode.Conflict => "That action isn't allowed right now.",
+            _ => "Something went wrong. Please try again."
+        }));
+    }
+
+    private sealed record ApiError(string? Error);
 
     private HttpRequestMessage NewRequest(HttpMethod method, string path)
     {

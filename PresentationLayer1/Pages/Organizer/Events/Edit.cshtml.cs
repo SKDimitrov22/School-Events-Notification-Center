@@ -64,15 +64,23 @@ public sealed class EditModel(IApiClient api, IAuthSession auth) : PageModel
             return Page();
         }
 
-        if (Id is null)
+        try
         {
-            await api.CreateEventAsync(Input, cancellationToken);
-            TempData["Message"] = "Draft event created.";
+            if (Id is null)
+            {
+                await api.CreateEventAsync(Input, cancellationToken);
+                TempData["Message"] = "Draft event created.";
+            }
+            else
+            {
+                await api.UpdateEventAsync(Id, Input, cancellationToken);
+                TempData["Message"] = "Event saved.";
+            }
         }
-        else
+        catch (ApiException ex)
         {
-            await api.UpdateEventAsync(Id, Input, cancellationToken);
-            TempData["Message"] = "Draft event saved.";
+            ModelState.AddModelError(string.Empty, ex.Message);
+            return Page();
         }
 
         return RedirectToPage("/Organizer/Events/Index");

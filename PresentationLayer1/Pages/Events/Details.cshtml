@@ -38,7 +38,7 @@ else
       }
       else if (Model.Auth.IsStudent)
       {
-        <span class="badge">@Model.Event.CurrentUserRegistrationStatus</span>
+        <span class="badge @Model.Event.CurrentUserRegistrationStatus?.ToLowerInvariant()">@Model.Event.CurrentUserRegistrationStatus</span>
         @if (Model.Event.CurrentUserWaitlistPosition is int position)
         {
           <span class="muted">Position @position</span>
