@@ -4,6 +4,8 @@ public sealed record UserInfo(string Id, string Email, string Role, string Displ
 
 public sealed record LoginRequest(string Email, string Password = "");
 
+public sealed record SignupRequest(string Email, string Password, string Role, string DisplayName);
+
 public sealed record LoginResponse(string Token, UserInfo User);
 
 public sealed record EventSummary(

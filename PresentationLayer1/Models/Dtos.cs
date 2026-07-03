@@ -64,4 +64,20 @@ public sealed class EventUpsertRequest
     public string? Location { get; set; }
 }
 
+public sealed class SignupRequest
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string Password { get; set; } = string.Empty;
+
+    [Required]
+    public string Role { get; set; } = "STUDENT";
+
+    [Required]
+    public string DisplayName { get; set; } = string.Empty;
+}
+
 public sealed record LoginRequest([Required] string Email, string Password = "");

@@ -26,6 +26,22 @@ public sealed class AuthService(ISchoolEventsRepository repository) : IAuthServi
         return user is null ? null : new UserInfo(user.Id, user.Email, user.Role, user.DisplayName);
     }
 
+    public async Task<bool> SignUpAsync(SignupRequest request, CancellationToken cancellationToken = default)
+    {
+        var existing = await repository.GetUserByEmailAsync(request.Email, cancellationToken);
+        if (existing is not null)
+        {
+            return false;
+        }
+
+        var role = string.Equals(request.Role, "ORGANIZER", StringComparison.OrdinalIgnoreCase)
+            ? "ORGANIZER"
+            : "STUDENT";
+
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+        return await repository.CreateUserAsync(request.Email, passwordHash, role, request.DisplayName, cancellationToken);
+    }
+
     private static bool PasswordMatches(string password, string passwordHash)
     {
         if (passwordHash.StartsWith("$2", StringComparison.Ordinal))
