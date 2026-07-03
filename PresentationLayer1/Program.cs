@@ -49,10 +49,21 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 
-var mockApiBaseUrl = builder.Configuration["MockApiBaseUrl"] ?? "http://localhost:5090";
+var hostUrl = builder.Configuration["ASPNETCORE_URLS"]
+    ?? builder.Configuration["urls"]
+    ?? builder.Configuration["MockApiBaseUrl"]
+    ?? "http://localhost:5000";
+
+if (hostUrl.Contains(';'))
+{
+    hostUrl = hostUrl.Split(';', StringSplitOptions.RemoveEmptyEntries)[0];
+}
+
+builder.WebHost.UseUrls(hostUrl);
+
 builder.Services.AddHttpClient<IApiClient, ApiClient>(client =>
 {
-    client.BaseAddress = new Uri(mockApiBaseUrl);
+    client.BaseAddress = new Uri(hostUrl);
 });
 builder.Services.AddScoped<IAuthSession, AuthSession>();
 

@@ -21,6 +21,26 @@ public sealed class SchoolEventsRepository(AppDbContext db) : ISchoolEventsRepos
         return user is null ? null : ToRecord(user);
     }
 
+    public async Task<bool> CreateUserAsync(string email, string passwordHash, string role, string displayName, CancellationToken cancellationToken = default)
+    {
+        if (await GetUserByEmailAsync(email, cancellationToken) is not null)
+        {
+            return false;
+        }
+
+        db.Users.Add(new User
+        {
+            Id = NewId(),
+            Email = email,
+            PasswordHash = passwordHash,
+            Role = role,
+            DisplayName = displayName,
+        });
+
+        await db.SaveChangesAsync(cancellationToken);
+        return true;
+    }
+
     public async Task<IReadOnlyList<EventRecord>> GetEventsAsync(UserRecord? user, CancellationToken cancellationToken = default)
     {
         var query = db.Events.AsNoTracking();

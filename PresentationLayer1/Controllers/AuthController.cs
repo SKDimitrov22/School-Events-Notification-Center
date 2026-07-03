@@ -14,4 +14,16 @@ public sealed class AuthController(IAuthService authService) : ControllerBase
         var response = await authService.LoginAsync(request, cancellationToken);
         return response is null ? Unauthorized(new { error = "Invalid email or password." }) : response;
     }
+
+    [HttpPost("signup")]
+    public async Task<ActionResult> Signup(SignupRequest request, CancellationToken cancellationToken)
+    {
+        var success = await authService.SignUpAsync(
+            new BusinessLogicLayer2.Dtos.SignupRequest(request.Email, request.Password, request.Role, request.DisplayName),
+            cancellationToken);
+
+        return !success
+            ? Conflict(new { error = "Email already registered." })
+            : Ok(new { success = true });
+    }
 }

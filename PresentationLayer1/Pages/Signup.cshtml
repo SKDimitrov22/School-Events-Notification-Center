@@ -1,0 +1,23 @@
+@page
+@model PresentationLayer1.Pages.SignupModel
+@{
+    ViewData["Title"] = "Sign up";
+}
+
+<section class="panel narrow">
+  <h1>Sign up</h1>
+  <form method="post" class="stack">
+    <label>Email<input asp-for="Input.Email" type="email" required /></label>
+    <label>Password<input asp-for="Input.Password" type="password" required /></label>
+    <label>Name<input asp-for="Input.DisplayName" required /></label>
+    <label>Account type
+      <select asp-for="Input.Role">
+        <option value="STUDENT">Student</option>
+        <option value="ORGANIZER">Organizer</option>
+      </select>
+    </label>
+    <span asp-validation-summary="All" class="muted"></span>
+    <button type="submit">Create account</button>
+  </form>
+  <p class="muted">Already have an account? <a asp-page="/Login">Login here</a>.</p>
+</section>

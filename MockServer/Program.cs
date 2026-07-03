@@ -33,6 +33,29 @@ app.MapPost("/login", IResult (LoginRequest request) =>
     return Results.Ok(new LoginResponse(MockDatabase.GenerateJwt(user), user));
 });
 
+app.MapPost("/signup", IResult (SignupRequest request) =>
+{
+    if (string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password) ||
+        string.IsNullOrWhiteSpace(request.DisplayName) || string.IsNullOrWhiteSpace(request.Role))
+    {
+        return Results.BadRequest(new { error = "All fields are required." });
+    }
+
+    if (database.GetUserByEmail(request.Email) is not null)
+    {
+        return Results.Conflict(new { error = "Email already registered." });
+    }
+
+    var role = request.Role.Trim().ToUpperInvariant() switch
+    {
+        "ORGANIZER" => "ORGANIZER",
+        _ => "STUDENT",
+    };
+
+    var user = database.CreateUser(request.Email.Trim(), request.Password.Trim(), role, request.DisplayName.Trim());
+    return user is null ? Results.BadRequest(new { error = "Could not create user." }) : Results.Ok(user);
+});
+
 app.MapGet("/events", (HttpRequest request) =>
 {
     var user = database.GetCurrentUser(request);
@@ -204,6 +227,30 @@ sealed class MockDatabase
         command.Parameters.AddWithValue("$id", id);
         using var reader = command.ExecuteReader();
         return reader.Read() ? ReadUser(reader) : null;
+    }
+
+    public MockUser? CreateUser(string email, string password, string role, string displayName)
+    {
+        var id = NewId();
+        using var connection = OpenConnection();
+        using var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO users (id, email, password_hash, role, display_name) VALUES ($id, $email, $password, $role, $displayName)";
+        command.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$email", email);
+        command.Parameters.AddWithValue("$password", password);
+        command.Parameters.AddWithValue("$role", role);
+        command.Parameters.AddWithValue("$displayName", displayName);
+
+        try
+        {
+            command.ExecuteNonQuery();
+        }
+        catch
+        {
+            return null;
+        }
+
+        return new MockUser(id, email, role, displayName);
     }
 
     public IReadOnlyList<EventSummary> GetEvents(MockUser? user)
@@ -723,6 +770,7 @@ sealed class MockDatabase
 
 sealed record MockUser(string Id, string Email, string Role, string DisplayName);
 sealed record LoginRequest(string Email, string Password = "");
+sealed record SignupRequest(string Email, string Password, string Role, string DisplayName);
 sealed record LoginResponse(string Token, MockUser User);
 sealed class EventUpsertRequest
 {
